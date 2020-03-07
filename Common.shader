@@ -6,6 +6,9 @@
 #define MAX_FLOAT 1e5
 #define MAX_RECURSION 100
 
+#define AU 10.0
+
+#define At = 0.1
 //
 // Hash functions by Nimitz:
 // https://www.shadertoy.com/view/Xt3cDn
@@ -54,4 +57,68 @@ vec3 random_in_unit_sphere(inout float seed) {
     float phi = h.y;
     float r = pow(h.z, 1./3.);
 	return r * vec3(sqrt(1.-h.x*h.x)*vec2(sin(phi),cos(phi)),h.x);
+}
+
+float euclidean_dist (vec2 P, vec2 Q) {
+
+	return sqrt(pow(P.x - Q.x, 2.0) + pow(P.y - Q.y, 2.0));
+
+}
+
+float area_run (vec2 P, vec2 Q, vec2 F) {
+
+	float base = euclidean_dist(P, Q);
+
+    float height = sqrt(pow(euclidean_dist(P, F), 2.0) - pow(base / 2.0, 2.0));
+
+    return base * height / 2.0;
+
+}
+
+float get_y (float x, float a, float b, float Cx, float s) {
+
+	return s * (b/a) * sqrt(pow(a, 2.0) - pow((x - Cx), 2.0));
+
+}
+
+vec3 get_next_pos (vec3 P, float a, float b, float Cx, float delta, float A_t, vec2 F) {
+
+	float area = 0.0;
+
+    float x = P.x;
+
+    float y = 0.0;
+
+    float s = P.z;
+
+    while (area < A_t) {
+
+    	x = x + s * delta;
+
+        if (x < (Cx - a)) {
+
+        	x = Cx - a;
+
+        }
+
+        else if (x > (Cx + a)) {
+
+        	x = Cx + a;
+
+        }
+
+        y = get_y(x, a, b, Cx, s);
+
+        if ((y == 0.0) || (s < 0.0 && y > 0.0) || (s > 0.0 && y < 0.0)) {
+
+        	s = -s;
+
+        }
+
+        area = area_run(P.xy, vec2(x, y), F);
+
+    }
+
+    return vec3(x, y, s);
+
 }

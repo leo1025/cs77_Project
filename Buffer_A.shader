@@ -1,7 +1,20 @@
-#define LAMBERT_INT 2
-#define DIELECTRIC_INT 3
-#define DIFFUSE_INT 4
+#define LAMBERT_INT 20
+#define DIELECTRIC_INT 30
+#define DIFFUSE_INT 40
 #define PI 3.1415926538
+
+#define SUN 0
+#define EARTH 3
+
+#define DELTA 5e-5
+
+// Source for Earth information
+// https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+
+#define EARTH_SEMIMAJOR_AXIS 10.0001
+#define EARTH_SEMIMINOR_AXIS 10.0
+
+// defining a distance of 10 as AU
 
 struct ray
 {
@@ -15,6 +28,13 @@ struct material {
     float mat_dep;
 };
 
+struct planet_info {
+
+    vec4 col; // w=planet id
+    vec4 pos; // xyz. w=sign
+
+};
+
 struct hit_record {
 
     float t;
@@ -22,11 +42,16 @@ struct hit_record {
     vec3 p;
 
     float u;
+
     float v;
 
     vec3 normal;
 
     material mat;
+
+    float id;
+
+    vec4 pos; // xyz. w=sign
 
 };
 
@@ -38,6 +63,8 @@ struct sphere {
     float radius;
 
     material mat;
+
+    float s;
 };
 
 struct box {
@@ -66,27 +93,21 @@ struct camera {
 sphere generate_scene(int gen_num) {
 
 
-    if(gen_num == 0) {
+    if(gen_num == 0) { // sun
 
-    	return sphere(vec3(0.0, 0.0, 0.0), 2.0, material(vec3(10.0, 10.0, 10.0), DIFFUSE_INT, 0.0));
-
-    }
-
-    else if(gen_num == 1) {
-
-    	return sphere(vec3(6.0, 0.0, 0.0), 0.5, material(vec3(0.3), LAMBERT_INT, 1.0));
+    	return sphere(vec3(0.0, 0.0, 0.0), 2.0, material(vec3(10.0, 10.0, 10.0), DIFFUSE_INT, 0.0), 0.0);
 
     }
 
-    else if(gen_num == 2) {
+    else if(gen_num == 1) { // earth
 
-    	return sphere(vec3(11.0, 0.0, 0.0), 0.7, material(vec3(0.3), LAMBERT_INT, 1.0));
+        vec4 tex = texture(iChannel0, vec2(0.0));
 
-    }
+        vec3 curr_pos = tex.xyz; // only send xzw
 
-    else if(gen_num == 3) {
+        float s = tex.w;
 
-    	return sphere(vec3(-5.0, 0.0, 0.0), 1.0, material(vec3(0.3), LAMBERT_INT, 1.0));
+    	return sphere(vec3(10.0, 0.0, 0.0), 0.5, material(vec3(0.1, 0.1, 0.5), LAMBERT_INT, 0.0), s);
 
     }
 }
@@ -243,30 +264,6 @@ ray get_ray(camera cam, float u, float v) {
 
 }
 
-bool hit_box(box b, ray r, inout hit_record rec) {
-
-	float t = (b.k - r.origin.z/r.direction.z);
-
-    float x = r.origin.x + t*r.direction.x;
-    float y = r.origin.y + t*r.direction.y;
-
-    if (x < b.x0 || x > b.x1 || y < b.y0 || y > b.y1) {
-
-    	return false;
-
-    }
-
-    rec.u = (x-b.x0)/(b.x1-b.x0);
-    rec.v = (y-b.y0)/(b.y1-b.y0);
-    rec.t = t;
-    rec.mat = b.mat;
-    rec.p = (r.origin + rec.t*r.direction);
-    rec.normal = vec3(0.0, 0.0, 1.0);
-
-    return true;
-
-}
-
 bool hit_sphere(sphere s, ray r, float t_min, float t_max, inout hit_record rec) {
 
     vec3 origin_to_center = r.origin - s.center;
@@ -289,6 +286,7 @@ bool hit_sphere(sphere s, ray r, float t_min, float t_max, inout hit_record rec)
             rec.p = (r.origin + rec.t*r.direction);
             rec.normal = (rec.p - s.center)/s.radius;
             rec.mat = s.mat;
+            rec.pos = vec4(s.center, s.s);
 
             return true;
         }
@@ -300,6 +298,7 @@ bool hit_sphere(sphere s, ray r, float t_min, float t_max, inout hit_record rec)
             rec.p = (r.origin + rec.t*r.direction);
             rec.normal = (rec.p - s.center)/s.radius;
             rec.mat = s.mat;
+            rec.pos = vec4(s.center, s.s);
 
             return true;
         }
@@ -317,7 +316,7 @@ bool hit(ray r, float t_min, float t_max, inout hit_record rec) {
 
     sphere curr;
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 8; i++) {
 
         curr = generate_scene(i);
 
@@ -326,6 +325,7 @@ bool hit(ray r, float t_min, float t_max, inout hit_record rec) {
             hit_anything = true;
             closest_so_far = temp_rec.t;
             rec = temp_rec;
+            rec.id = float(i);
         }
     }
 
@@ -333,21 +333,23 @@ bool hit(ray r, float t_min, float t_max, inout hit_record rec) {
 
 }
 
-vec3 color(ray r, int depth) {
+planet_info color(ray r, int depth) {
 
     hit_record rec;
 
-    vec3 color_vec = vec3(1.0, 1.0, 1.0);
+    planet_info pi;
+
+    vec4 color_vec = vec4(vec3(1.0), 0.0);
 
     for(int i = 0; i < MAX_RECURSION; i++) {
 
-        if (depth < 100 && hit(r, 0.001, MAX_FLOAT, rec)) {
+        if (depth < 50 && hit(r, 0.001, MAX_FLOAT, rec)) {
 
             ray scattered;
 
             vec3 attuenation;
 
-            vec3 emitted = vec3(8.0, 8.0, 8.0);
+            vec4 emitted = vec4(10.0, 10.0, 10.0, -1.0);
 
             if (material_scatter(r, rec, attuenation, scattered)) {
 
@@ -355,37 +357,44 @@ vec3 color(ray r, int depth) {
 
                 depth += 1;
 
-            	color_vec = emitted + color_vec*attuenation;
+            	color_vec = emitted + color_vec*vec4(attuenation, 1.0);
+
+                color_vec.w = rec.id;
+
+                pi.col = color_vec;
+                pi.pos = rec.pos;
 
             } else {
 
-            	//color_vec *= vec3(0.0);
+                pi.col = emitted;
+            	pi.pos = vec4(-1.0);
 
-                return emitted;
+                return pi;
 
             }
 
         } else {
 
-            vec3 unitDirection = normalize(r.direction);
+            pi.col = vec4(0.0);
+            pi.pos = vec4(-1.0);
 
-            float t = 0.5*(unitDirection.y + 1.0);
-
-            color_vec *= (1.0-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
-
-            return vec3(0.0);
+            return pi;
         }
     }
 
-    return vec3(0.0);
+    return pi;
 
 }
 
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
+    vec2 uv = fragCoord / iResolution.xy;
 
-    camera cam = get_camera(vec3(0.0, 0, 10.0), vec3(0.0, 0.0, 0.0), vec3(0.0, 1.0, 0.0), 100.0, iResolution.x/iResolution.y, 0.0, length(vec3(3.0, 3.0,3.0) -  vec3(2.0, 1.4, 2.0)));
+    camera cam = get_camera(vec3(0.0, 0, 10.0), vec3(0.0, 2.0, 0.0), vec3(0.0, 1.0, 0.0), 100.0, iResolution.x/iResolution.y, 0.0, length(vec3(3.0, 3.0,3.0) -  vec3(2.0, 1.4, 2.0)));
+
     vec3 col;
+
+    planet_info ret;
 
     init_rand(fragCoord, iTime);
 
@@ -396,13 +405,25 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
         ray rout = get_ray(cam, u, v);
 
-        col += color(rout, 0);
+        ret = color(rout, 0);
+
+        col += ret.col.xyz;
 
     }
 
     col = col/100.0;
-
+    
     col = pow(col, vec3(1.0/2.2));
 
-    fragColor = vec4(col, 1.0);
+    if (uv.x > 7.0 && uv.y > 0.0) {
+
+        fragColor = vec4(col, 1.0);
+
+    }
+
+    if (fragCoord.x == 0.0 && fragCoord.y == 0.0 && ret.col.w == 1.0) {
+
+    	fragColor = ret.pos;
+
+    }
 }
