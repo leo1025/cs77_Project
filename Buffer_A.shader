@@ -375,11 +375,11 @@ vec2 map(vec3 p, inout settings setts)
 
     vec3 pos_earth = texture(iChannel1, vec2(0.0)).xyz;
 
-    vec3 pos_mars = texture(iChannel1, vec2(0.3)).xyz;
+    //vec3 pos_mars = texture(iChannel1, vec2(0.3)).xyz;
 
-    vec3 pos_jupiter = texture(iChannel1, vec2(0.6)).xyz;
+    //vec3 pos_jupiter = texture(iChannel1, vec2(0.6)).xyz;
 
-    vec3 pos_saturn = texture(iChannel1, vec2(0.9)).xyz;
+    //vec3 pos_saturn = texture(iChannel1, vec2(0.9)).xyz;
 
     vec2 final;
 
@@ -394,23 +394,23 @@ vec2 map(vec3 p, inout settings setts)
         final = earth;
     }
 
-    vec2 mars = vec2(world_sdf(p, pos_mars, iTime, settings(MARS, DIFFUSE_POINT_SOFT_SHADOWS)), 2.0);
+    //vec2 mars = vec2(world_sdf(p, pos_mars, iTime, settings(MARS, DIFFUSE_POINT_SOFT_SHADOWS)), 2.0);
 
-    if (mars.x < final.x){
-        final = mars;
-    }
+    //if (mars.x < final.x){
+      //  final = mars;
+    //}
 
-    vec2 jupiter = vec2(world_sdf(p, pos_jupiter, iTime, settings(JUPITER, DIFFUSE_POINT_SOFT_SHADOWS)), 3.0);
+    //vec2 jupiter = vec2(world_sdf(p, pos_jupiter, iTime, settings(JUPITER, DIFFUSE_POINT_SOFT_SHADOWS)), 3.0);
 
-    if(jupiter.x < final.x){
-        final = jupiter;
-    }
+    //if(jupiter.x < final.x){
+      //  final = jupiter;
+    //}
 
-    vec2 saturn = vec2(world_sdf(p, pos_saturn, iTime, settings(SATURN, DIFFUSE_POINT_SOFT_SHADOWS)), 4.0);
+    //vec2 saturn = vec2(world_sdf(p, pos_saturn, iTime, settings(SATURN, DIFFUSE_POINT_SOFT_SHADOWS)), 4.0);
 
-    if(saturn.x < final.x){
-        final = saturn;
-    }
+    //if(saturn.x < final.x){
+      //  final = saturn;
+    //}
 
     return final;
 }
