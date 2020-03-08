@@ -7,8 +7,10 @@
 #define BOX 1
 #define CYLINDER 2
 #define CONE 3
-#define PLANET 4
-#define SPHERE_THREE 5
+#define EARTH 4
+#define MARS 5
+#define JUPITER 6
+#define SATURN 6
 
 // shade mode
 #define GRID 0
@@ -30,7 +32,7 @@ struct settings
     int shade_mode;
 };
 
-settings render_settings = settings(BOX, DIFFUSE_POINT_SOFT_SHADOWS);
+settings render_settings = settings(BOX, DIFFUSE_POINT_SOFT_SHADOWS); // initial object
 
 //float anim_speed = 0.35;
 float anim_speed = 0.35;
@@ -110,12 +112,27 @@ float world_sdf(vec3 p, vec3 obj_pos, float time, settings setts)
 {
     if (setts.sdf_func == SUN)
     {
-        return sdSphere(p - obj_pos, 1.0f);
+        return sdSphere(p - obj_pos, 3.0f);
     }
 
-    if (setts.sdf_func == PLANET)
+    if (setts.sdf_func == EARTH)
     {
-        return sdSphere(p - obj_pos, 0.25f);
+        return sdSphere(p - obj_pos, 1.5f);
+    }
+
+    if (setts.sdf_func == MARS)
+    {
+        return sdSphere(p - obj_pos, 1.5f);
+    }
+
+    if (setts.sdf_func == JUPITER)
+    {
+        return sdSphere(p - obj_pos, 1.5f);
+    }
+
+    if (setts.sdf_func == SATURN)
+    {
+        return sdSphere(p - obj_pos, 1.5f);
     }
 
     return 1.f;

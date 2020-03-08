@@ -1,22 +1,35 @@
-float map(vec3 p, settings setts)
+const vec3 lightColor = vec3(16.86, 8.76 +2., 3.2 + .5);
+
+float map(vec3 p, inout settings setts)
 {
-    vec4 tex = texture(iChannel1, vec2(0.0));
 
-    vec3 pos_earth = tex.xyz;
+    vec3 pos_earth = texture(iChannel1, vec2(0.0)).xyz;
 
-    //float s_earth = tex.w;
+    vec3 pos_mars = texture(iChannel1, vec2(0.3)).xyz;
 
-    //vec3 pos_mars;
+    vec3 pos_jupiter = texture(iChannel1, vec2(0.6)).xyz;
 
-    //vec3 pos_jupiter;
-
-    //vec3 pos_saturn;
+    vec3 pos_saturn = texture(iChannel1, vec2(0.9)).xyz;
 
     float sun = world_sdf(p, vec3(0.0, 0.0, 0.0), iTime, settings(SUN, DIFFUSE_POINT_SOFT_SHADOWS));
 
-    float planet = world_sdf(p, pos_earth, iTime, settings(PLANET, DIFFUSE_POINT_SOFT_SHADOWS));
+    float earth = world_sdf(p, pos_earth, iTime, settings(EARTH, DIFFUSE_POINT_SOFT_SHADOWS));
 
-    return min(planet, sun);
+    float mars = world_sdf(p, pos_mars, iTime, settings(MARS, DIFFUSE_POINT_SOFT_SHADOWS));
+
+    float jupiter = world_sdf(p, pos_jupiter, iTime, settings(JUPITER, DIFFUSE_POINT_SOFT_SHADOWS));
+
+    float saturn = world_sdf(p, pos_saturn, iTime, settings(SATURN, DIFFUSE_POINT_SOFT_SHADOWS));
+
+    float m = min(earth, sun);
+
+    m = min(m, mars);
+
+    m = min(m, jupiter);
+
+    m = min(m, saturn);
+
+    return m;
 }
 
 vec3 computeNormal(vec3 p, settings setts)
@@ -137,89 +150,10 @@ vec3 shade(vec3 p, int iters, settings setts)
     {
         return 0.5 * vec3(computeNormal(p, setts) + 1.0);
     }
-    else if (setts.shade_mode == DIFFUSE_POINT)
-    {
-        vec3 light_pos = vec3(0.0, 5.0, 0.0);
-        vec3 light_intensity = vec3(5.0);
-        vec3 surface_color = vec3(0.5);
 
-        vec3 LightVector = light_pos - p;
-
-        float dist = pow(length(LightVector), 2.0);
-
-        vec3 NNormal = computeNormal(p, setts);
-
-        vec3 NLight = normalize(LightVector);
-
-        float LambertVal = max(0.0, dot(NNormal, NLight));
-
-        vec3 color = surface_color * light_intensity/dist * LambertVal;
-
-        return color;
-    }
-    else if (setts.shade_mode == DIFFUSE_POINT_HARD_SHADOWS)
-    {
-        vec3 light_pos = vec3(0.0, 0.0, 0.0);
-        vec3 light_intensity = vec3(20.0);
-        vec3 surface_color = vec3(0.5);
-
-        vec3 LightVector = light_pos - p;
-
-        float dist = pow(length(LightVector), 2.0);
-
-        vec3 NNormal = computeNormal(p, setts);
-
-        vec3 NLight = normalize(LightVector);
-
-        float LambertVal = max(0.0, dot(NNormal, NLight));
-
-        vec3 color = surface_color * light_intensity/dist * LambertVal;
-
-        int iters = 0;
-
-        vec3 hit_loc = vec3(0.0);
-
-        if (sphere_tracing(ray(p+EPSILON*NNormal, NLight), 1000, setts, hit_loc, iters)) {
-
-            return vec3(0.0);
-
-        }
-
-        return color;
-    }
-    else if (setts.shade_mode == DIFFUSE_DIR_HARD_SHADOWS)
-    {
-        vec3 light_dir = normalize(vec3(-1.0, -1.0, 0.0));
-        vec3 light_color = vec3(0.8);
-        vec3 surface_color = vec3(0.5);
-
-        vec3 LightVector = -light_dir;
-
-        float dist = pow(length(LightVector), 2.0);
-
-        vec3 NNormal = computeNormal(p, setts);
-
-        vec3 NLight = normalize(LightVector);
-
-        float LambertVal = max(0.0, dot(NNormal, NLight));
-
-        vec3 color = surface_color * light_color/dist * LambertVal;
-
-        int iters = 0;
-
-        vec3 hit_loc = vec3(0.0);
-
-        if (sphere_tracing(ray(p+EPSILON*NNormal, NLight), 1000, setts, hit_loc, iters)) {
-
-            return vec3(0.0);
-
-        }
-
-        return color;
-    }
     else if (setts.shade_mode == DIFFUSE_POINT_SOFT_SHADOWS)
     {
-        vec3 light_pos = vec3(0.0, 5.0, 0.0);
+        vec3 light_pos = vec3(0.0, 15.0, 0.0);
         vec3 light_intensity = vec3(1000.0);
         vec3 surface_color = vec3(0.5);
         float shadow_k = 0.5;
@@ -264,54 +198,6 @@ vec3 shade(vec3 p, int iters, settings setts)
         return color * soft_shadow(ray(p+EPSILON*NNormal, NLight), 1000, setts, shadow_k);
 
     }
-    else if (setts.shade_mode == FINAL_SCENE_REFLECT)
-    {
-        vec3 point_light_pos = vec3(0.0, 5.0, 0.0);
-        vec3 point_light_intensity = vec3(10.0, 9.0, 4.0);
-
-        vec3 dir_light_dir = normalize(vec3(-1.0, -1.0, 0.0));
-        vec3 dir_light_color = vec3(0.6 * 0.75, 0.5 * 0.75, 0.1 * 0.75);
-
-        vec3 surface_color = vec3(0.5);
-
-        float shadow_k = 1.0;
-
-        vec3 LightVector_dir = -dir_light_dir;
-
-        vec3 LightVector_point = point_light_pos - p;
-
-        float dist = pow(length(LightVector_dir), 2.0);
-
-        vec3 NNormal = computeNormal(p, setts);
-
-        vec3 NLight = normalize(LightVector_dir);
-
-        float LambertVal = max(0.0, dot(NNormal, NLight));
-
-        vec3 color_dir = surface_color * dir_light_color/dist * LambertVal;
-
-        int iters = 0;
-
-        vec3 hit_loc = vec3(0.0);
-
-        color_dir =  color_dir * soft_shadow(ray(p+EPSILON*NNormal, NLight), 1000, setts, shadow_k);
-
-        dist = pow(length(LightVector_point), 2.0);
-
-        NLight = normalize(LightVector_point);
-
-        LambertVal = max(0.0, dot(NNormal, NLight));
-
-        vec3 color = surface_color * point_light_intensity/dist * LambertVal;
-
-        color = color * soft_shadow(ray(p+EPSILON*NNormal, NLight), 1000, setts, shadow_k);
-
-        return color_dir + color;
-    }
-    else
-    {
-        return vec3(0.0);
-    }
 
     return vec3(0.0);
 }
@@ -319,7 +205,7 @@ vec3 shade(vec3 p, int iters, settings setts)
 vec3 render(settings setts, vec2 fragCoord)
 {
 
-    camera cam = camera_const(vec3(-20.0, 10.0, -40.0),
+    camera cam = camera_const(vec3(-20.0, 10.0, -150.0),
     				          vec3(0.0, 0.0, 0.0),
                               vec3(0.0, 1.0, 0.0),
                               20.0,
@@ -361,5 +247,21 @@ vec3 render(settings setts, vec2 fragCoord)
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord)
 {
-    fragColor = vec4(render(render_settings, fragCoord), 1.0);
+    vec2 uv = fragCoord / iResolution.xy;
+
+    vec3 col = render(render_settings, fragCoord);
+
+    if (fragCoord.y > 5.0) {
+
+        fragColor = vec4(col, 1.0);
+
+    }
+
+    else {
+
+    	fragColor = texture(iChannel1, uv);
+
+    }
+
+   // fragColor = vec4(col, 1.0);
 }
