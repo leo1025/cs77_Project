@@ -8,7 +8,15 @@
 
 #define AU 10.0
 
-#define AT 0.1
+#define AT 5.0
+
+#define DELTA 5e-5
+
+// Source for Earth information
+// https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+
+#define EARTH_SEMIMAJOR_AXIS 10.0
+#define EARTH_SEMIMINOR_AXIS 10.0
 //
 // Hash functions by Nimitz:
 // https://www.shadertoy.com/view/Xt3cDn

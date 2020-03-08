@@ -6,14 +6,6 @@
 #define SUN 0
 #define EARTH 3
 
-#define DELTA 5e-5
-
-// Source for Earth information
-// https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
-
-#define EARTH_SEMIMAJOR_AXIS 10.0
-#define EARTH_SEMIMINOR_AXIS 10.0
-
 // defining a distance of 10 as AU
 
 struct ray
@@ -101,31 +93,13 @@ sphere generate_scene(int gen_num) {
 
     else if(gen_num == 1) { // earth
 
-        vec4 tex = texture(iChannel0, vec2(0.0));
+        vec4 tex = texture(iChannel1, vec2(5.0));
 
-        vec3 curr_pos = tex.xyz; // only send xzw
+        vec3 pos = tex.xyz;
 
         float s = tex.w;
 
-        float k = 1.0;
-
-        float Cx = (EARTH_SEMIMAJOR_AXIS - k) / 2.0;
-
-        vec2 F = vec2(-k/2.0, 0.0);
-
-        vec3 next_pos = get_next_pos(vec3(curr_pos.xz, s),
-                                    EARTH_SEMIMAJOR_AXIS,
-                                    EARTH_SEMIMINOR_AXIS,
-                                    Cx,
-                                    DELTA,
-                                    AT,
-                                    F);
-
-        vec3 new_pos = vec3(next_pos.x, curr_pos.y, next_pos.y);
-
-        s = next_pos.z;
-
-    	return sphere(new_pos, 0.5, material(vec3(0.1, 0.1, 0.5), LAMBERT_INT, 0.0), 0.0);
+    	return sphere(pos, 0.5, material(vec3(0.1, 0.1, 0.5), LAMBERT_INT, 0.0), s);
 
     }
 }
@@ -448,13 +422,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     else {
 
-    	fragColor = texture(iChannel0, uv);
+    	fragColor = texture(iChannel1, uv);
 
     }
 
-    if (iFrame < 1) {
-
-    	fragColor = vec4(10.0, 0.0, 0.0, 1.0);
-
-    }
 }
