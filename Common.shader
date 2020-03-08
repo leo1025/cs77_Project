@@ -23,6 +23,9 @@
 #define DIFFUSE_DIR_SOFT_SHADOWS 7
 #define FINAL_SCENE_REFLECT 8
 
+// radius
+#define EARTHR 3.0
+
 //
 // Render Settings
 //
@@ -117,22 +120,22 @@ float world_sdf(vec3 p, vec3 obj_pos, float time, settings setts)
 
     if (setts.sdf_func == EARTH)
     {
-        return sdSphere(p - obj_pos, 1.5f);
+        return sdSphere(p - obj_pos, EARTHR);
     }
 
     if (setts.sdf_func == MARS)
     {
-        return sdSphere(p - obj_pos, 1.5f);
+        return sdSphere(p - obj_pos, EARTHR);
     }
 
     if (setts.sdf_func == JUPITER)
     {
-        return sdSphere(p - obj_pos, 1.5f);
+        return sdSphere(p - obj_pos, EARTHR);
     }
 
     if (setts.sdf_func == SATURN)
     {
-        return sdSphere(p - obj_pos, 1.5f);
+        return sdSphere(p - obj_pos, EARTHR);
     }
 
     return 1.f;
@@ -289,4 +292,22 @@ vec3 get_next_pos (vec3 P, float a, float b, float Cx, float delta, float A_t, v
 
     return vec3(x, y, s);
 
+}
+
+//----------------------------------------------------------------------------------------
+//  1 out, 1 in...
+float hash11(float p)
+{
+    p = fract(p * .1031);
+    p *= p + 33.33;
+    p *= p + p;
+    return fract(p);
+}
+
+//  1 out, 2 in...
+float hash12(vec2 p)
+{
+	vec3 p3  = fract(vec3(p.xyx) * .1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
 }
