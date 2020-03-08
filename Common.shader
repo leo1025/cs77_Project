@@ -4,7 +4,7 @@
 
 #define EPSILON 1e-3
 #define MAX_FLOAT 1e5
-#define MAX_RECURSION 100
+#define MAX_RECURSION 50
 
 #define AT 1.0
 
@@ -15,6 +15,15 @@
 
 #define EARTH_SEMIMAJOR_AXIS 10.0
 #define EARTH_SEMIMINOR_AXIS 10.0
+
+#define MARS_SEMIMAJOR_AXIS 15.0
+#define MARS_SEMIMINOR_AXIS 15.0
+
+#define JUPITER_SEMIMAJOR_AXIS 50.0
+#define JUPITER_SEMIMINOR_AXIS 50.0
+
+#define SATURN_SEMIMAJOR_AXIS 95.0
+#define SATURN_SEMIMINOR_AXIS 95.0
 //
 // Hash functions by Nimitz:
 // https://www.shadertoy.com/view/Xt3cDn

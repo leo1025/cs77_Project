@@ -1,17 +1,45 @@
 void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
+    vec4 col;
 
-    if (iFrame < 60) {
+    vec2 uv = fragCoord / iResolution.xy;
 
-    	fragColor = vec4(10.0, 0.0, 0.0, 1.0);
+    if (iTime < 3.0) {
+
+        if(uv.x < 0.25) {
+
+
+            col = vec4( (EARTH_SEMIMAJOR_AXIS - 1.0) / 2.0 + EARTH_SEMIMAJOR_AXIS, 0.0, 0.0, 1.0);
+
+        }
+
+        else if(uv.x < 0.5 && uv.x >= 0.25) {
+
+        	col = vec4( (MARS_SEMIMAJOR_AXIS - 1.0) / 2.0 + MARS_SEMIMAJOR_AXIS, 0.0, 0.0, 1.0);
+
+        }
+
+        else if(uv.x < 0.75 && uv.x >= 0.5) {
+
+        	col = vec4( (JUPITER_SEMIMAJOR_AXIS - 1.0) / 2.0 + JUPITER_SEMIMAJOR_AXIS, 0.0, 0.0, 1.0);
+
+        }
+
+        else {
+
+        	col = vec4( (SATURN_SEMIMAJOR_AXIS - 1.0) / 2.0 + SATURN_SEMIMAJOR_AXIS, 0.0, 0.0, 1.0);
+
+        }
 
     }
 
     else{
 
-            vec4 tex = texture(iChannel1, fragCoord);
+        if(uv.x < 0.25) {
 
-        	vec3 curr_pos = tex.xyz; // only send xzw
+            vec4 tex = texture(iChannel1, uv);
+
+            vec3 curr_pos = tex.xyz; // only send xzw
 
             float s = tex.w;
 
@@ -22,20 +50,116 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             vec2 F = vec2(-k/2.0, 0.0);
 
             vec3 next_pos = get_next_pos(vec3(curr_pos.xz, s),
-                                        EARTH_SEMIMAJOR_AXIS,
-                                        EARTH_SEMIMINOR_AXIS,
-                                        Cx,
-                                        DELTA,
-                                        AT,
-                                        F);
+                                            EARTH_SEMIMAJOR_AXIS,
+                                            EARTH_SEMIMINOR_AXIS,
+                                            Cx,
+                                            DELTA,
+                                            AT,
+                                            F);
 
             vec3 new_pos = vec3(next_pos.x, curr_pos.y, next_pos.y);
 
             s = next_pos.z;
 
-            fragColor = vec4(new_pos, s);
+            col = vec4(new_pos, s);
+
+        }
+        else if (uv.x >= 0.25 && uv.x < 0.5){
+
+             vec4 tex = texture(iChannel1, uv);
+
+            vec3 curr_pos = tex.xyz; // only send xzw
+
+            float s = tex.w;
+
+            float k = 1.0;
+
+            float Cx = (MARS_SEMIMAJOR_AXIS - k) / 2.0;
+
+            vec2 F = vec2(-k/2.0, 0.0);
+
+            vec3 next_pos = get_next_pos(vec3(curr_pos.xz, s),
+                                            MARS_SEMIMAJOR_AXIS,
+                                            MARS_SEMIMINOR_AXIS,
+                                            Cx,
+                                            DELTA,
+                                            AT,
+                                            F);
+
+            vec3 new_pos = vec3(next_pos.x, curr_pos.y, next_pos.y);
+
+            s = next_pos.z;
+
+            col = vec4(new_pos, s);
+
+        }
+        else if (uv.x >= 0.5 && uv.x < 0.75){
+
+             vec4 tex = texture(iChannel1, uv);
+
+            vec3 curr_pos = tex.xyz; // only send xzw
+
+            float s = tex.w;
+
+            float k = 1.0;
+
+            float Cx = (JUPITER_SEMIMAJOR_AXIS - k) / 2.0;
+
+            vec2 F = vec2(-k/2.0, 0.0);
+
+            vec3 next_pos = get_next_pos(vec3(curr_pos.xz, s),
+                                            JUPITER_SEMIMAJOR_AXIS,
+                                            JUPITER_SEMIMINOR_AXIS,
+                                            Cx,
+                                            DELTA,
+                                            AT,
+                                            F);
+
+            vec3 new_pos = vec3(next_pos.x, curr_pos.y, next_pos.y);
+
+            s = next_pos.z;
+
+            col = vec4(new_pos, s);
+
+        }
+        else if (uv.x >= 0.75){
+
+             vec4 tex = texture(iChannel1, uv);
+
+            vec3 curr_pos = tex.xyz; // only send xzw
+
+            float s = tex.w;
+
+            float k = 1.0;
+
+            float Cx = (SATURN_SEMIMAJOR_AXIS - k) / 2.0;
+
+            vec2 F = vec2(-k/2.0, 0.0);
+
+            vec3 next_pos = get_next_pos(vec3(curr_pos.xz, s),
+                                            SATURN_SEMIMAJOR_AXIS,
+                                            SATURN_SEMIMINOR_AXIS,
+                                            Cx,
+                                            DELTA,
+                                            AT,
+                                            F);
+
+            vec3 new_pos = vec3(next_pos.x, curr_pos.y, next_pos.y);
+
+            s = next_pos.z;
+
+            col = vec4(new_pos, s);
+
+        }
+        else {
+
+        	vec4 tex = texture(iChannel1, uv);
+
+            col = tex;
+
+        }
 
     }
 
-
+    fragColor = col;
 }

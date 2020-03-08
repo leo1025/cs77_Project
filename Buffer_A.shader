@@ -5,6 +5,7 @@
 
 #define SUN 0
 #define EARTH 3
+#define MARS 4
 
 // defining a distance of 10 as AU
 
@@ -87,11 +88,11 @@ sphere generate_scene(int gen_num) {
 
     if(gen_num == 0) { // sun
 
-    	return sphere(vec3(0.0, 0.0, 0.0), 2.0, material(vec3(10.0, 10.0, 10.0), DIFFUSE_INT, 0.0), 0.0);
+    	return sphere(vec3(2.0, 0.0, 0.0), 3.0, material(vec3(10.0, 10.0, 10.0), DIFFUSE_INT, 0.0), 0.0);
 
     }
 
-    else if(gen_num == 1) { // earth
+	else if(gen_num == 1) { // earth
 
         vec4 tex = texture(iChannel1, vec2(0.0));
 
@@ -99,9 +100,46 @@ sphere generate_scene(int gen_num) {
 
         float s = tex.w;
 
-    	return sphere(pos, 0.5, material(vec3(0.1, 0.1, 0.5), LAMBERT_INT, 0.0), s);
+    	return sphere(pos, 1.0, material(vec3(0.1, 0.1, 0.5), LAMBERT_INT, 0.0), s);
 
     }
+
+    else if(gen_num == 2) { // mars
+
+        vec4 tex = texture(iChannel1, vec2(0.3));
+
+        vec3 pos = tex.xyz;
+
+        float s = tex.w;
+
+    	return sphere(pos, 1.0, material(vec3(0.5, 0.1, 0.1), LAMBERT_INT, 0.0), s);
+
+    }
+
+    else if(gen_num == 3) { // Jupiter
+
+        vec4 tex = texture(iChannel1, vec2(0.6));
+
+        vec3 pos = tex.xyz;
+
+        float s = tex.w;
+
+    	return sphere(pos, 1.0, material(vec3(0.5, 0.1, 0.1), LAMBERT_INT, 0.0), s);
+
+    }
+
+    else if(gen_num == 4) { // Saturn
+
+        vec4 tex = texture(iChannel1, vec2(0.9));
+
+        vec3 pos = tex.xyz;
+
+        float s = tex.w;
+
+    	return sphere(pos, 1.0, material(vec3(0.5, 0.1, 0.1), LAMBERT_INT, 0.0), s);
+
+    }
+
 }
 
 camera get_camera (vec3 lookfrom, vec3 lookat, vec3 vup, float vfov, float aspect, float aperture, float focus_dist) {
@@ -341,7 +379,7 @@ planet_info color(ray r, int depth) {
 
             vec3 attuenation;
 
-            vec4 emitted = vec4(10.0, 10.0, 10.0, -1.0);
+            vec4 emitted = vec4(50.0, 50.0, 50.0, -1.0);
 
             if (material_scatter(r, rec, attuenation, scattered)) {
 
@@ -367,7 +405,7 @@ planet_info color(ray r, int depth) {
 
         } else {
 
-            pi.col = vec4(0.0);
+            pi.col = vec4(0.01);
             pi.pos = vec4(-1.0);
 
             return pi;
@@ -382,7 +420,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     vec2 uv = fragCoord / iResolution.xy;
 
-    camera cam = get_camera(vec3(0.0, 0, 20.0), vec3(0.0, 2.0, 0.0), vec3(0.0, 1.0, 0.0), 100.0, iResolution.x/iResolution.y, 0.0, length(vec3(3.0, 3.0,3.0) -  vec3(2.0, 1.4, 2.0)));
+    camera cam = get_camera(vec3(0.0, 0, 30.0), vec3(0.0, 2.0, 0.0), vec3(0.0, 1.0, 0.0), 120.0, iResolution.x/iResolution.y, 0.0, length(vec3(3.0, 3.0,3.0) -  vec3(2.0, 1.4, 2.0)));
 
     vec3 col;
 
@@ -390,7 +428,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     init_rand(fragCoord, iTime);
 
-    for(int s = 0; s < 100; s++) {
+    for(int s = 0; s < 50; s++) {
 
         float u = float(fragCoord.x + rand1(g_seed))/iResolution.x;
         float v = float(fragCoord.y + rand1(g_seed))/iResolution.y;
@@ -403,27 +441,20 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     }
 
-    col = col/100.0;
+    col = col/50.0;
 
     col = pow(col, vec3(1.0/2.2));
 
 
-    if (fragCoord.x > 20.0 || fragCoord.y > 20.0) {
+    if (fragCoord.y > 5.0) {
 
         fragColor = vec4(col, 1.0);
 
     }
-
-    //else if (fragCoord.x == 0.0 && fragCoord.y == 0.0 && ret.col.w == 1.0) {
-
-    //	fragColor = ret.pos;
-
-    //}
 
     else {
 
     	fragColor = texture(iChannel1, uv);
 
     }
-
 }
