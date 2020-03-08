@@ -1,460 +1,365 @@
-#define LAMBERT_INT 20
-#define DIELECTRIC_INT 30
-#define DIFFUSE_INT 40
-#define PI 3.1415926538
-
-#define SUN 0
-#define EARTH 3
-#define MARS 4
-
-// defining a distance of 10 as AU
-
-struct ray
+float map(vec3 p, settings setts)
 {
-    vec3 origin;
-    vec3 direction;
-};
+    vec4 tex = texture(iChannel1, vec2(0.0));
 
-struct material {
-    vec3 albedo;
-	int mat_type;
-    float mat_dep;
-};
+    vec3 pos_earth = tex.xyz;
 
-struct planet_info {
+    //float s_earth = tex.w;
 
-    vec4 col; // w=planet id
-    vec4 pos; // xyz. w=sign
+    //vec3 pos_mars;
 
-};
+    //vec3 pos_jupiter;
 
-struct hit_record {
+    //vec3 pos_saturn;
 
-    float t;
+    float sun = world_sdf(p, vec3(0.0, 0.0, 0.0), iTime, settings(SUN, DIFFUSE_POINT_SOFT_SHADOWS));
 
-    vec3 p;
+    float planet = world_sdf(p, pos_earth, iTime, settings(PLANET, DIFFUSE_POINT_SOFT_SHADOWS));
 
-    float u;
-
-    float v;
-
-    vec3 normal;
-
-    material mat;
-
-    float id;
-
-    vec4 pos; // xyz. w=sign
-
-};
-
-
-struct sphere {
-
-    vec3 center;
-
-    float radius;
-
-    material mat;
-
-    float s;
-};
-
-struct box {
-
-	float x0;
-    float x1;
-    float y0;
-    float y1;
-
-    float k;
-
-    material mat;
-};
-
-struct camera {
-
-    vec3 lower_left_corner;
-    vec3 horizontal;
-    vec3 vertical;
-    vec3 origin;
-    vec3 u, v, w;
-    float lens_radius;
-
-};
-
-sphere generate_scene(int gen_num) {
-
-
-    if(gen_num == 0) { // sun
-
-    	return sphere(vec3(2.0, 0.0, 0.0), 3.0, material(vec3(10.0, 10.0, 10.0), DIFFUSE_INT, 0.0), 0.0);
-
-    }
-
-	else if(gen_num == 1) { // earth
-
-        vec4 tex = texture(iChannel1, vec2(0.0));
-
-        vec3 pos = tex.xyz;
-
-        float s = tex.w;
-
-    	return sphere(pos, 1.0, material(vec3(0.1, 0.1, 0.5), LAMBERT_INT, 0.0), s);
-
-    }
-
-    else if(gen_num == 2) { // mars
-
-        vec4 tex = texture(iChannel1, vec2(0.3));
-
-        vec3 pos = tex.xyz;
-
-        float s = tex.w;
-
-    	return sphere(pos, 1.0, material(vec3(0.5, 0.1, 0.1), LAMBERT_INT, 0.0), s);
-
-    }
-
-    else if(gen_num == 3) { // Jupiter
-
-        vec4 tex = texture(iChannel1, vec2(0.6));
-
-        vec3 pos = tex.xyz;
-
-        float s = tex.w;
-
-    	return sphere(pos, 1.0, material(vec3(0.5, 0.1, 0.1), LAMBERT_INT, 0.0), s);
-
-    }
-
-    else if(gen_num == 4) { // Saturn
-
-        vec4 tex = texture(iChannel1, vec2(0.9));
-
-        vec3 pos = tex.xyz;
-
-        float s = tex.w;
-
-    	return sphere(pos, 1.0, material(vec3(0.5, 0.1, 0.1), LAMBERT_INT, 0.0), s);
-
-    }
-
+    return min(planet, sun);
 }
 
-camera get_camera (vec3 lookfrom, vec3 lookat, vec3 vup, float vfov, float aspect, float aperture, float focus_dist) {
+vec3 computeNormal(vec3 p, settings setts)
+{
+    vec2 h = vec2(EPSILON, 0.0);
 
-    camera new_cam;
-
-    new_cam.lens_radius = aperture/2.0;
-
-	float theta = vfov*PI/180.0;
-
-    float half_height = tan(theta/2.0);
-
-    float half_width = aspect * half_height;
-
-    new_cam.origin = lookfrom;
-
-    new_cam.w = normalize(lookfrom - lookat);
-
-    new_cam.u = normalize(cross(vup, new_cam.w));
-
-    new_cam.v = cross(new_cam.w, new_cam.u);
-
-    new_cam.lower_left_corner = vec3(-half_width, -half_height, -1.0);
-
-    new_cam.lower_left_corner = new_cam.origin - half_width*focus_dist*new_cam.u - half_height*focus_dist*new_cam.v - focus_dist*new_cam.w;
-
-    new_cam.horizontal = 2.0*focus_dist*half_width*new_cam.u;
-
-    new_cam.vertical  = 2.0*focus_dist*half_height*new_cam.v;
-
-    return new_cam;
-}
-
-float schlick(float cosine, float ref_idx) {
-
-    float r0 = (1.0-ref_idx) / (1.0+ref_idx);
-
-    r0 = r0*r0;
-
-    return r0 + (1.0-r0)*pow((1.0-cosine), 5.0);
+    return normalize(vec3(map(p + h.xyy, setts) - map(p - h.xyy, setts),
+                          map(p + h.yxy, setts) - map(p - h.yxy, setts),
+                          map(p + h.yyx, setts) - map(p - h.yyx, setts)));
 
 }
+bool sphere_tracing(ray r,
+               		int max_iter,
+               		settings setts,
+               		out vec3 hit_loc,
+               		out int iters)
+{
+    //hit_loc = r.origin + r.direction * (-r.origin.y / r.direction.y);
+    //iters = 1;
+    //return true;
 
-bool does_refract(inout vec3 v, inout vec3 n, inout float ni_over_nt, inout vec3 refracted) {
+    // TODO: implement sphere tracing
 
-    vec3 uv = normalize(v);
+    // it should work as follows:
+    //
+    // while (hit has not occured && iteration < max_iters)
+    //     set the step size to be the SDF
+    //     march step size forwards
+    //     if a collision occurs (SDF < EPSILON)
+    //         return hit location and iteration count
+    // return false
 
-    float dt = dot(uv, n);
 
-    float discriminant = 1.0 - ni_over_nt*ni_over_nt*(1.0-dt*dt);
+    int i = 0;
 
-    if(discriminant > 0.0) {
+    while (i < max_iter) {
 
-    	refracted = ni_over_nt*(uv - n*dt) - n*sqrt(discriminant);
+        float SDF = map(r.origin, setts);
 
-        return true;
+        r.origin = r.origin + SDF * r.direction;
 
-    } else {
+        if (SDF < EPSILON) {
 
-    	return false;
 
-    }
+            hit_loc = r.origin;
 
-}
-
-vec3 emitted(material mat) {
-
-	return mat.albedo;
-
-}
-
-bool material_scatter(inout ray r, inout hit_record rec, inout vec3 attuenation, inout ray scattered) {
-
-    if (rec.mat.mat_type == LAMBERT_INT) {
-
-        vec3 target = normalize(rec.normal + random_in_unit_sphere(g_seed));
-
-        scattered = ray(rec.p, target);
-
-        attuenation = rec.mat.albedo;
-
-        return true;
-
-    }
-
-    else if (rec.mat.mat_type == DIELECTRIC_INT) {
-
-        vec3 outward_normal;
-
-        vec3 reflected = normalize(r.direction) - 2.0*dot(normalize(r.direction), rec.normal)*rec.normal;
-
-        float ni_over_nt;
-
-        attuenation = vec3(1.0, 1.0, 1.0);
-
-        vec3 refracted;
-
-        float reflect_prob;
-
-        float cosine;
-
-        if (dot(r.direction, rec.normal) > 0.0) {
-
-        	outward_normal = -rec.normal;
-
-            ni_over_nt = rec.mat.mat_dep;
-
-            cosine = rec.mat.mat_dep * dot(r.direction, rec.normal) / length(r.direction);
-
-        } else {
-
-            outward_normal = rec.normal;
-
-            ni_over_nt = 1.0/rec.mat.mat_dep;
-
-            cosine = -dot(r.direction, rec.normal) / length(r.direction);
-
-        }
-
-        if (does_refract(r.direction, outward_normal, ni_over_nt, refracted)) {
-
-        	reflect_prob = schlick(cosine, rec.mat.mat_dep);
-
-        } else {
-
-        	reflect_prob = 1.0;
-
-        }
-
-        if (rand1(g_seed) < reflect_prob) {
-
-            scattered = ray(rec.p, reflected);
-
-        } else {
-
-        	scattered = ray(rec.p, refracted);
-
-        }
-
-        return true;
-
-    }
-}
-
-ray get_ray(camera cam, float u, float v) {
-
-    vec2 rd = cam.lens_radius*random_in_unit_disk(g_seed);
-
-    vec3 offset = cam.u * rd.x + cam.v * rd.y;
-
-    return ray(cam.origin + offset, cam.lower_left_corner + u*cam.horizontal + v*cam.vertical - cam.origin - offset);
-
-}
-
-bool hit_sphere(sphere s, ray r, float t_min, float t_max, inout hit_record rec) {
-
-    vec3 origin_to_center = r.origin - s.center;
-
-    float a = dot(r.direction, r.direction);
-
-    float b = dot(origin_to_center, r.direction);
-
-    float c = dot(origin_to_center, origin_to_center) - (s.radius * s.radius);
-
-    float discriminant = (b*b) - (a*c);
-
-    if (discriminant > 0.0) {
-
-    	float temp = (-b - sqrt(b*b-a*c))/a;
-
-        if(temp < t_max && temp > t_min) {
-
-            rec.t = temp;
-            rec.p = (r.origin + rec.t*r.direction);
-            rec.normal = (rec.p - s.center)/s.radius;
-            rec.mat = s.mat;
-            rec.pos = vec4(s.center, s.s);
+            iters = i;
 
             return true;
+
         }
 
-        temp = (-b + sqrt(b*b-a*c))/a;
-        if (temp < t_max && temp > t_min) {
-
-        	rec.t = temp;
-            rec.p = (r.origin + rec.t*r.direction);
-            rec.normal = (rec.p - s.center)/s.radius;
-            rec.mat = s.mat;
-            rec.pos = vec4(s.center, s.s);
-
-            return true;
-        }
+        i++;
 
     }
-   	return false;
+
+    iters = max_iter;
+
+    return false;
 }
 
-
-bool hit(ray r, float t_min, float t_max, inout hit_record rec) {
-
-	hit_record temp_rec;
-    bool hit_anything = false;
-    float closest_so_far = t_max;
-
-    sphere curr;
-
-    for (int i = 0; i < 8; i++) {
-
-        curr = generate_scene(i);
-
-        if(hit_sphere(curr, r, t_min, closest_so_far, temp_rec)) {
-
-            hit_anything = true;
-            closest_so_far = temp_rec.t;
-            rec = temp_rec;
-            rec.id = float(i);
-        }
-    }
-
-    return hit_anything;
-
-}
-
-planet_info color(ray r, int depth) {
-
-    hit_record rec;
-
-    planet_info pi;
-
-    vec4 color_vec = vec4(vec3(1.0), 0.0);
-
-    for(int i = 0; i < MAX_RECURSION; i++) {
-
-        if (depth < 50 && hit(r, 0.001, MAX_FLOAT, rec)) {
-
-            ray scattered;
-
-            vec3 attuenation;
-
-            vec4 emitted = vec4(50.0, 50.0, 50.0, -1.0);
-
-            if (material_scatter(r, rec, attuenation, scattered)) {
-
-                r = scattered;
-
-                depth += 1;
-
-            	color_vec = emitted + color_vec*vec4(attuenation, 1.0);
-
-                color_vec.w = rec.id;
-
-                pi.col = color_vec;
-                pi.pos = rec.pos;
-
-            } else {
-
-                pi.col = emitted;
-            	pi.pos = vec4(-1.0);
-
-                return pi;
-
-            }
-
-        } else {
-
-            pi.col = vec4(0.01);
-            pi.pos = vec4(-1.0);
-
-            return pi;
-        }
-    }
-
-    return pi;
-
-}
-
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
+float soft_shadow(ray r,
+                  int max_iter,
+               	  settings setts,
+                  float k)
 {
-    vec2 uv = fragCoord / iResolution.xy;
 
-    camera cam = get_camera(vec3(0.0, 0, 30.0), vec3(0.0, 2.0, 0.0), vec3(0.0, 1.0, 0.0), 120.0, iResolution.x/iResolution.y, 0.0, length(vec3(3.0, 3.0,3.0) -  vec3(2.0, 1.4, 2.0)));
+    int i = 0;
 
-    vec3 col;
+    float step_size = 0.0;
 
-    planet_info ret;
+    float dist = 0.0;
 
-    init_rand(fragCoord, iTime);
+    float ratio = 1.0;
 
-    for(int s = 0; s < 50; s++) {
+    while (i < max_iter) {
 
-        float u = float(fragCoord.x + rand1(g_seed))/iResolution.x;
-        float v = float(fragCoord.y + rand1(g_seed))/iResolution.y;
+        float SDF = map(r.origin, setts);
 
-        ray rout = get_ray(cam, u, v);
+        r.origin = r.origin + SDF * normalize(r.direction);
 
-        ret = color(rout, 0);
+        step_size = length(normalize(r.direction) * SDF);
 
-        col += ret.col.xyz;
+        dist += step_size;
 
-    }
+        if (SDF < EPSILON) {
 
-    col = col/50.0;
+            return ratio;
 
-    col = pow(col, vec3(1.0/2.2));
+        }
 
+        ratio = min(ratio, step_size/dist * k);
 
-    if (fragCoord.y > 5.0) {
-
-        fragColor = vec4(col, 1.0);
+        i++;
 
     }
 
-    else {
+    return ratio;
+}
 
-    	fragColor = texture(iChannel1, uv);
+vec3 shade(vec3 p, int iters, settings setts)
+{
+    if (setts.shade_mode == GRID)
+    {
+    	float res = 0.2;
+    	float one = abs(mod(p.x, res) - res / 2.0);
+    	float two = abs(mod(p.y, res) - res / 2.0);
+    	float three = abs(mod(p.z, res) - res / 2.0);
+    	float interp = min(one, min(two, three)) / res;
+
+        return mix( vec3(0.2, 0.5, 1.0), vec3(0.1, 0.1, 0.1), smoothstep(0.0,0.05,abs(interp)) );
+    }
+    else if (setts.shade_mode == COST)
+    {
+        return vec3(float(iters) / float(cost_norm));
+    }
+    else if (setts.shade_mode == NORMAL)
+    {
+        return 0.5 * vec3(computeNormal(p, setts) + 1.0);
+    }
+    else if (setts.shade_mode == DIFFUSE_POINT)
+    {
+        vec3 light_pos = vec3(0.0, 5.0, 0.0);
+        vec3 light_intensity = vec3(5.0);
+        vec3 surface_color = vec3(0.5);
+
+        vec3 LightVector = light_pos - p;
+
+        float dist = pow(length(LightVector), 2.0);
+
+        vec3 NNormal = computeNormal(p, setts);
+
+        vec3 NLight = normalize(LightVector);
+
+        float LambertVal = max(0.0, dot(NNormal, NLight));
+
+        vec3 color = surface_color * light_intensity/dist * LambertVal;
+
+        return color;
+    }
+    else if (setts.shade_mode == DIFFUSE_POINT_HARD_SHADOWS)
+    {
+        vec3 light_pos = vec3(0.0, 0.0, 0.0);
+        vec3 light_intensity = vec3(20.0);
+        vec3 surface_color = vec3(0.5);
+
+        vec3 LightVector = light_pos - p;
+
+        float dist = pow(length(LightVector), 2.0);
+
+        vec3 NNormal = computeNormal(p, setts);
+
+        vec3 NLight = normalize(LightVector);
+
+        float LambertVal = max(0.0, dot(NNormal, NLight));
+
+        vec3 color = surface_color * light_intensity/dist * LambertVal;
+
+        int iters = 0;
+
+        vec3 hit_loc = vec3(0.0);
+
+        if (sphere_tracing(ray(p+EPSILON*NNormal, NLight), 1000, setts, hit_loc, iters)) {
+
+            return vec3(0.0);
+
+        }
+
+        return color;
+    }
+    else if (setts.shade_mode == DIFFUSE_DIR_HARD_SHADOWS)
+    {
+        vec3 light_dir = normalize(vec3(-1.0, -1.0, 0.0));
+        vec3 light_color = vec3(0.8);
+        vec3 surface_color = vec3(0.5);
+
+        vec3 LightVector = -light_dir;
+
+        float dist = pow(length(LightVector), 2.0);
+
+        vec3 NNormal = computeNormal(p, setts);
+
+        vec3 NLight = normalize(LightVector);
+
+        float LambertVal = max(0.0, dot(NNormal, NLight));
+
+        vec3 color = surface_color * light_color/dist * LambertVal;
+
+        int iters = 0;
+
+        vec3 hit_loc = vec3(0.0);
+
+        if (sphere_tracing(ray(p+EPSILON*NNormal, NLight), 1000, setts, hit_loc, iters)) {
+
+            return vec3(0.0);
+
+        }
+
+        return color;
+    }
+    else if (setts.shade_mode == DIFFUSE_POINT_SOFT_SHADOWS)
+    {
+        vec3 light_pos = vec3(0.0, 5.0, 0.0);
+        vec3 light_intensity = vec3(1000.0);
+        vec3 surface_color = vec3(0.5);
+        float shadow_k = 0.5;
+
+        vec3 LightVector = light_pos - p;
+
+        float dist = pow(length(LightVector), 2.0);
+
+        vec3 NNormal = computeNormal(p, setts);
+
+        vec3 NLight = normalize(LightVector);
+
+        float LambertVal = max(0.0, dot(NNormal, NLight));
+
+        vec3 color = surface_color * light_intensity/dist * LambertVal;
+
+        return color * soft_shadow(ray(p+EPSILON*NNormal, NLight), 1000, setts, shadow_k);
+    }
+    else if (setts.shade_mode == DIFFUSE_DIR_SOFT_SHADOWS)
+    {
+        vec3 light_dir = normalize(vec3(-1.0, -1.0, 0.0));
+        vec3 light_color = vec3(0.8);
+        vec3 surface_color = vec3(0.5);
+        float shadow_k = 1.0;
+
+        vec3 LightVector = -light_dir;
+
+        float dist = pow(length(LightVector), 2.0);
+
+        vec3 NNormal = computeNormal(p, setts);
+
+        vec3 NLight = normalize(LightVector);
+
+        float LambertVal = max(0.0, dot(NNormal, NLight));
+
+        vec3 color = surface_color * light_color/dist * LambertVal;
+
+        int iters = 0;
+
+        vec3 hit_loc = vec3(0.0);
+
+        return color * soft_shadow(ray(p+EPSILON*NNormal, NLight), 1000, setts, shadow_k);
 
     }
+    else if (setts.shade_mode == FINAL_SCENE_REFLECT)
+    {
+        vec3 point_light_pos = vec3(0.0, 5.0, 0.0);
+        vec3 point_light_intensity = vec3(10.0, 9.0, 4.0);
+
+        vec3 dir_light_dir = normalize(vec3(-1.0, -1.0, 0.0));
+        vec3 dir_light_color = vec3(0.6 * 0.75, 0.5 * 0.75, 0.1 * 0.75);
+
+        vec3 surface_color = vec3(0.5);
+
+        float shadow_k = 1.0;
+
+        vec3 LightVector_dir = -dir_light_dir;
+
+        vec3 LightVector_point = point_light_pos - p;
+
+        float dist = pow(length(LightVector_dir), 2.0);
+
+        vec3 NNormal = computeNormal(p, setts);
+
+        vec3 NLight = normalize(LightVector_dir);
+
+        float LambertVal = max(0.0, dot(NNormal, NLight));
+
+        vec3 color_dir = surface_color * dir_light_color/dist * LambertVal;
+
+        int iters = 0;
+
+        vec3 hit_loc = vec3(0.0);
+
+        color_dir =  color_dir * soft_shadow(ray(p+EPSILON*NNormal, NLight), 1000, setts, shadow_k);
+
+        dist = pow(length(LightVector_point), 2.0);
+
+        NLight = normalize(LightVector_point);
+
+        LambertVal = max(0.0, dot(NNormal, NLight));
+
+        vec3 color = surface_color * point_light_intensity/dist * LambertVal;
+
+        color = color * soft_shadow(ray(p+EPSILON*NNormal, NLight), 1000, setts, shadow_k);
+
+        return color_dir + color;
+    }
+    else
+    {
+        return vec3(0.0);
+    }
+
+    return vec3(0.0);
+}
+
+vec3 render(settings setts, vec2 fragCoord)
+{
+
+    camera cam = camera_const(vec3(-20.0, 10.0, -40.0),
+    				          vec3(0.0, 0.0, 0.0),
+                              vec3(0.0, 1.0, 0.0),
+                              20.0,
+                              640.0 / 360.0,
+                              0.0,
+                              sqrt(27.0));
+
+
+    vec2 uv = fragCoord/iResolution.xy;
+    ray r = camera_get_ray(cam, uv);
+
+    int max_iter = 1000;
+
+    vec3 col = vec3(0.0);
+
+    vec3 hit_loc;
+    int iters;
+    bool hit;
+
+    if (sphere_tracing(r, max_iter, setts, hit_loc, iters))
+    {
+        col = shade(hit_loc, iters, setts);
+    }
+
+    if (setts.shade_mode == FINAL_SCENE_REFLECT)
+    {
+        float reflection_coefficient = 0.15;
+
+        vec3 norm = normalize(computeNormal(hit_loc, setts));
+
+        if(sphere_tracing(ray(hit_loc+EPSILON*norm, reflect(normalize(r.direction), norm)), max_iter, setts, hit_loc, iters)) {
+        	col += reflection_coefficient * shade(hit_loc, iters, setts);
+
+        }
+    }
+
+    return pow(col, vec3(1.0 / 2.2));
+}
+
+void mainImage(out vec4 fragColor, in vec2 fragCoord)
+{
+    fragColor = vec4(render(render_settings, fragCoord), 1.0);
 }
