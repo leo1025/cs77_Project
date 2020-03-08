@@ -11,7 +11,7 @@
 // Source for Earth information
 // https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
 
-#define EARTH_SEMIMAJOR_AXIS 10.0001
+#define EARTH_SEMIMAJOR_AXIS 10.0
 #define EARTH_SEMIMINOR_AXIS 10.0
 
 // defining a distance of 10 as AU
@@ -107,7 +107,25 @@ sphere generate_scene(int gen_num) {
 
         float s = tex.w;
 
-    	return sphere(vec3(10.0, 0.0, 0.0), 0.5, material(vec3(0.1, 0.1, 0.5), LAMBERT_INT, 0.0), s);
+        float k = 1.0;
+
+        float Cx = (EARTH_SEMIMAJOR_AXIS - k) / 2.0;
+
+        vec2 F = vec2(-k/2.0, 0.0);
+
+        vec3 next_pos = get_next_pos(vec3(curr_pos.xz, s),
+                                    EARTH_SEMIMAJOR_AXIS,
+                                    EARTH_SEMIMINOR_AXIS,
+                                    Cx,
+                                    DELTA,
+                                    AT,
+                                    F);
+
+        vec3 new_pos = vec3(next_pos.x, curr_pos.y, next_pos.y);
+
+        s = next_pos.z;
+
+    	return sphere(new_pos, 0.5, material(vec3(0.1, 0.1, 0.5), LAMBERT_INT, 0.0), 0.0);
 
     }
 }
@@ -390,7 +408,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     vec2 uv = fragCoord / iResolution.xy;
 
-    camera cam = get_camera(vec3(0.0, 0, 10.0), vec3(0.0, 2.0, 0.0), vec3(0.0, 1.0, 0.0), 100.0, iResolution.x/iResolution.y, 0.0, length(vec3(3.0, 3.0,3.0) -  vec3(2.0, 1.4, 2.0)));
+    camera cam = get_camera(vec3(0.0, 0, 20.0), vec3(0.0, 2.0, 0.0), vec3(0.0, 1.0, 0.0), 100.0, iResolution.x/iResolution.y, 0.0, length(vec3(3.0, 3.0,3.0) -  vec3(2.0, 1.4, 2.0)));
 
     vec3 col;
 
@@ -412,18 +430,31 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     }
 
     col = col/100.0;
-    
+
     col = pow(col, vec3(1.0/2.2));
 
-    if (uv.x > 7.0 && uv.y > 0.0) {
+
+    if (fragCoord.x > 20.0 || fragCoord.y > 20.0) {
 
         fragColor = vec4(col, 1.0);
 
     }
 
-    if (fragCoord.x == 0.0 && fragCoord.y == 0.0 && ret.col.w == 1.0) {
+    //else if (fragCoord.x == 0.0 && fragCoord.y == 0.0 && ret.col.w == 1.0) {
 
-    	fragColor = ret.pos;
+    //	fragColor = ret.pos;
+
+    //}
+
+    else {
+
+    	fragColor = texture(iChannel0, uv);
+
+    }
+
+    if (iFrame < 1) {
+
+    	fragColor = vec4(10.0, 0.0, 0.0, 1.0);
 
     }
 }

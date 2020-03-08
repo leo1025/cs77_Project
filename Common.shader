@@ -8,7 +8,7 @@
 
 #define AU 10.0
 
-#define At = 0.1
+#define AT 0.1
 //
 // Hash functions by Nimitz:
 // https://www.shadertoy.com/view/Xt3cDn
