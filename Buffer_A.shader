@@ -93,7 +93,7 @@ sphere generate_scene(int gen_num) {
 
     else if(gen_num == 1) { // earth
 
-        vec4 tex = texture(iChannel1, vec2(5.0));
+        vec4 tex = texture(iChannel1, vec2(0.0));
 
         vec3 pos = tex.xyz;
 

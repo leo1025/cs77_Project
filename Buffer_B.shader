@@ -7,7 +7,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     }
 
-    else if(fragCoord.x == 5.0 && fragCoord.y == 5.0) {
+    else{
 
             vec4 tex = texture(iChannel1, fragCoord);
 
@@ -34,13 +34,6 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             s = next_pos.z;
 
             fragColor = vec4(new_pos, s);
-
-        }
-
-
-    else {
-
-        fragColor = texture(iChannel1, fragCoord);
 
     }
 

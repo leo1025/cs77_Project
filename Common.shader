@@ -6,9 +6,7 @@
 #define MAX_FLOAT 1e5
 #define MAX_RECURSION 100
 
-#define AU 10.0
-
-#define AT 5.0
+#define AT 1.0
 
 #define DELTA 5e-5
 
