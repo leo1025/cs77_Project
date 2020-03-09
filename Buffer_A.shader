@@ -484,33 +484,35 @@ float soft_shadow(ray r,
                   float k)
 {
 
-    int i = 0;
-
-    float step_size = 0.0;
-
-    float dist = 0.0;
-
+    int it = 0;
+    float totalD = 0.0;
     float ratio = 1.0;
-
-    while (i < max_iter) {
-
-        float SDF = map(r.origin, setts).x;
-
-        r.origin = r.origin + SDF * normalize(r.direction);
-
-        step_size = length(normalize(r.direction) * SDF);
-
-        dist += step_size;
-
-        if (SDF < EPSILON) {
-
+    float currRatio;
+    float s = map(r.origin, setts).x;
+    vec3 loc = r.origin;
+    
+    while(it < max_iter){
+        // get the current location
+        loc = loc + normalize(r.direction) * s;
+        
+        // add the stepsize to the total distance traversed
+        totalD += length(normalize(r.direction) * s);
+        
+        // get the current ratio
+        currRatio = length(normalize(r.direction) * s)/totalD * k;
+        
+        // get the smaller ratio
+        ratio = min(currRatio, ratio);
+        
+        // if something gets hit, return the ratio
+        s = map(loc, setts).x;
+        if(s < EPSILON){
             return ratio;
-
         }
-
-        ratio = min(ratio, step_size/dist * k);
-
-        i++;
+        it++;
+    }
+    // if nothing gets hit, send out the ratio anyway
+    return min(ratio, 1.0);
 
     }
 
