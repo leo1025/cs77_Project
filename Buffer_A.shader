@@ -370,7 +370,7 @@ vec3 moon(vec2 uv){
 // -----------------------------------------------------------------------
 const vec3 lightColor = vec3(16.86, 8.76 +2., 3.2 + .5);
 
-vec2 map(vec3 p, inout settings setts)
+vec2 map(vec3 p, inout settings setts, bool notShadow)
 {
 
     vec3 pos_earth = texture(iChannel1, vec2(0.0)).xyz;
@@ -387,7 +387,7 @@ vec2 map(vec3 p, inout settings setts)
 
     vec2 earth = vec2(world_sdf(p, pos_earth, iTime, settings(EARTH, DIFFUSE_POINT_SOFT_SHADOWS)), 1.0);
 
-    if (sun.x < earth.x){
+    if (sun.x < earth.x && notShadow){
         final = sun;
     }
     else{
@@ -419,9 +419,9 @@ vec3 computeNormal(vec3 p, settings setts)
 {
     vec2 h = vec2(EPSILON, 0.0);
 
-    return normalize(vec3(map(p + h.xyy, setts).x - map(p - h.xyy, setts).x,
-                          map(p + h.yxy, setts).x - map(p - h.yxy, setts).x,
-                          map(p + h.yyx, setts).x - map(p - h.yyx, setts).x));
+    return normalize(vec3(map(p + h.xyy, setts, true).x - map(p - h.xyy, setts, true).x,
+                          map(p + h.yxy, setts, true).x - map(p - h.yxy, setts, true).x,
+                          map(p + h.yyx, setts, true).x - map(p - h.yyx, setts, true).x));
 
 }
 bool sphere_tracing(ray r,
@@ -451,7 +451,7 @@ bool sphere_tracing(ray r,
 
     while (i < max_iter) {
 
-        vec2 res = map(r.origin, setts);
+        vec2 res = map(r.origin, setts, true);
         float SDF = res.x;
 
         r.origin = r.origin + SDF * r.direction;
@@ -488,7 +488,7 @@ float soft_shadow(ray r,
     float totalD = 0.0;
     float ratio = 1.0;
     float currRatio;
-    float s = map(r.origin, setts).x;
+    float s = map(r.origin, setts, false).x;
     vec3 loc = r.origin;
     
     while(it < max_iter){
@@ -505,7 +505,7 @@ float soft_shadow(ray r,
         ratio = min(currRatio, ratio);
         
         // if something gets hit, return the ratio
-        s = map(loc, setts).x;
+        s = map(loc, setts, false).x;
         if(s < EPSILON){
             return ratio;
         }
