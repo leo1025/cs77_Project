@@ -1,3 +1,7 @@
+// by Iosef Casas and Jiro Mizuno
+
+// Perlin noise framework provided by below:
+
 // Copyright © 2020 Wojciech Jarosz
 // Based off of Andrew Kensler's blog: http://eastfarthing.com/blog/2015-04-21-noise/
 float falloff(float t)
@@ -370,6 +374,7 @@ vec3 moon(vec2 uv){
 // -----------------------------------------------------------------------
 const vec3 lightColor = vec3(16.86, 8.76 +2., 3.2 + .5);
 
+// determines the sdf of the area
 vec2 map(vec3 p, inout settings setts, bool notShadow)
 {
 
@@ -386,7 +391,8 @@ vec2 map(vec3 p, inout settings setts, bool notShadow)
     vec2 sun = vec2(world_sdf(p, vec3(0.0, 0.0, 0.0), iTime, settings(SUN, DIFFUSE_POINT_SOFT_SHADOWS)), 0.0);
 
     vec2 earth = vec2(world_sdf(p, pos_earth, iTime, settings(EARTH, DIFFUSE_POINT_SOFT_SHADOWS)), 1.0);
-
+	
+	// makes sure sun is not considered when determining shadows
     if (sun.x < earth.x && notShadow){
         final = sun;
     }
@@ -478,6 +484,8 @@ bool sphere_tracing(ray r,
     return false;
 }
 
+// calculates soft shadow by ignoring the sun and limiting shadow calculations
+// from the point to the sun
 float soft_shadow(ray r,
                   int max_iter,
                	  settings setts,
@@ -491,7 +499,10 @@ float soft_shadow(ray r,
     float currRatio;
     float s = map(r.origin, setts, false).x;
     vec3 loc = r.origin;
-
+	
+    // limit shadow calculations up to the sun so
+    // shadows don't form on planets on the other
+    // side of the solar system
     while(it < max_iter && totalD < dist2sun){
         // get the current location
         loc = loc + normalize(r.direction) * s;
@@ -533,9 +544,11 @@ vec3 shade(vec3 p, int iters, settings setts, float id)
 
     float LambertVal = max(0.0, dot(NNormal, NLight));
 
+    // if theres a sun, make it bright
     if(id == 0.0){
         return vec3(10.0);
     }
+    // if they're not the sun, texture them via UV mapping
     else if(id == 1.0){
         float r = EARTHR;
         vec3 o2p = normalize(r*NNormal);
