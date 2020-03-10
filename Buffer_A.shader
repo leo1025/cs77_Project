@@ -514,8 +514,6 @@ float soft_shadow(ray r,
     }
     // if nothing gets hit, send out the ratio anyway
     return min(ratio, 1.0);
-
-
 }
 
 vec3 shade(vec3 p, int iters, settings setts, float id)
