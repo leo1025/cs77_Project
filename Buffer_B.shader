@@ -6,28 +6,34 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     if (iTime < 3.0) {
 
-        if(uv.x < 0.25) {
+        if(uv.x < 0.20) {
 
 
             col = vec4( (EARTH_SEMIMAJOR_AXIS - 1.0) / 2.0 + EARTH_SEMIMAJOR_AXIS, 0.0, 0.0, 1.0);
 
         }
 
-        else if(uv.x < 0.5 && uv.x >= 0.25) {
+        else if(uv.x < 0.4 && uv.x >= 0.20) {
 
         	col = vec4( (MARS_SEMIMAJOR_AXIS - 1.0) / 2.0 + MARS_SEMIMAJOR_AXIS, 0.0, 0.0, 1.0);
 
         }
 
-        else if(uv.x < 0.75 && uv.x >= 0.5) {
+        else if(uv.x < 0.6 && uv.x >= 0.4) {
 
         	col = vec4( (JUPITER_SEMIMAJOR_AXIS - 1.0) / 2.0 + JUPITER_SEMIMAJOR_AXIS, 0.0, 0.0, 1.0);
 
         }
 
-        else {
+        else if(uv.x < 0.8 && uv.x >= 0.6) {
 
         	col = vec4( (SATURN_SEMIMAJOR_AXIS - 1.0) / 2.0 + SATURN_SEMIMAJOR_AXIS, 0.0, 0.0, 1.0);
+
+        }
+
+        else {
+
+        	col = vec4(-20.0, 10.0, -120.0, 1.0);
 
         }
 
@@ -35,7 +41,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 
     else{
 
-        if(uv.x < 0.25) {
+        if(uv.x < 0.20) {
 
             vec4 tex = texture(iChannel1, uv);
 
@@ -64,7 +70,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             col = vec4(new_pos, s);
 
         }
-        else if (uv.x >= 0.25 && uv.x < 0.5){
+        else if (uv.x >= 0.2 && uv.x < 0.4){
 
              vec4 tex = texture(iChannel1, uv);
 
@@ -93,7 +99,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             col = vec4(new_pos, s);
 
         }
-        else if (uv.x >= 0.5 && uv.x < 0.75){
+        else if (uv.x >= 0.4 && uv.x < 0.6){
 
              vec4 tex = texture(iChannel1, uv);
 
@@ -122,7 +128,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             col = vec4(new_pos, s);
 
         }
-        else if (uv.x >= 0.75){
+        else if (uv.x >= 0.6 && uv.x < 0.8){
 
              vec4 tex = texture(iChannel1, uv);
 
@@ -151,6 +157,44 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
             col = vec4(new_pos, s);
 
         }
+
+        else if (uv.x > 0.8) {
+
+            col = texture(iChannel1, uv);
+
+            if (isKeyDown(KEY_UP)) {
+
+            	col += vec4(0.0, 0.0, 1.0, 0.0);
+
+            }
+            if (isKeyDown(KEY_LEFT)) {
+
+            	col += vec4(1.0, 0.0, 0.0, 0.0);
+
+            }
+            if (isKeyDown(KEY_RIGHT)) {
+
+            	col += vec4(-1.0, 0.0, 0.0, 0.0);
+
+            }
+            if (isKeyDown(KEY_DOWN)) {
+
+            	col += vec4(0.0, 0.0, -1.0, 0.0);
+
+            }
+            if (isKeyDown(KEY_0)) {
+
+            	col += vec4(0.0, 1.0, 0.0, 0.0);
+
+            }
+            if (isKeyDown(KEY_1)) {
+
+            	col += vec4(0.0, -1.0, 0.0, 0.0);
+
+            }
+
+        }
+
         else {
 
         	vec4 tex = texture(iChannel1, uv);

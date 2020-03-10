@@ -375,11 +375,11 @@ vec2 map(vec3 p, inout settings setts, bool notShadow)
 
     vec3 pos_earth = texture(iChannel1, vec2(0.0)).xyz;
 
-    vec3 pos_mars = texture(iChannel1, vec2(0.3)).xyz;
+    vec3 pos_mars = texture(iChannel1, vec2(0.25)).xyz;
 
-    vec3 pos_jupiter = texture(iChannel1, vec2(0.6)).xyz;
+    vec3 pos_jupiter = texture(iChannel1, vec2(0.5)).xyz;
 
-    vec3 pos_saturn = texture(iChannel1, vec2(0.9)).xyz;
+    vec3 pos_saturn = texture(iChannel1, vec2(0.75)).xyz;
 
     vec2 final;
 
@@ -481,7 +481,8 @@ bool sphere_tracing(ray r,
 float soft_shadow(ray r,
                   int max_iter,
                	  settings setts,
-                  float k)
+                  float k,
+                  float dist2sun)
 {
 
     int it = 0;
@@ -490,20 +491,20 @@ float soft_shadow(ray r,
     float currRatio;
     float s = map(r.origin, setts, false).x;
     vec3 loc = r.origin;
-    
-    while(it < max_iter){
+
+    while(it < max_iter && totalD < dist2sun){
         // get the current location
         loc = loc + normalize(r.direction) * s;
-        
+
         // add the stepsize to the total distance traversed
         totalD += length(normalize(r.direction) * s);
-        
+
         // get the current ratio
         currRatio = length(normalize(r.direction) * s)/totalD * k;
-        
+
         // get the smaller ratio
         ratio = min(currRatio, ratio);
-        
+
         // if something gets hit, return the ratio
         s = map(loc, setts, false).x;
         if(s < EPSILON){
@@ -514,9 +515,7 @@ float soft_shadow(ray r,
     // if nothing gets hit, send out the ratio anyway
     return min(ratio, 1.0);
 
-    }
 
-    return ratio;
 }
 
 vec3 shade(vec3 p, int iters, settings setts, float id)
@@ -570,14 +569,17 @@ vec3 shade(vec3 p, int iters, settings setts, float id)
 
     vec3 color = surface_color * light_intensity/dist * LambertVal;
 
-    return color * soft_shadow(ray(p+EPSILON*NNormal, NLight), 1000, setts, shadow_k);
+    return color * soft_shadow(ray(p+EPSILON*NNormal, NLight), 1000, setts, shadow_k, length(LightVector));
 }
 
 vec3 render(settings setts, vec2 fragCoord)
 {
 
-    camera cam = camera_const(vec3(-20.0, 10.0, -250.0),
-    				          vec3(0.0, 0.0, 0.0),
+    vec3 cam_pos = texture(iChannel1, vec2(1.0)).xyz;
+
+    camera cam = camera_const(cam_pos,
+    				          cam_pos + vec3(20.0, -10.0, 120.0)
+                              ,
                               vec3(0.0, 1.0, 0.0),
                               20.0,
                               640.0 / 360.0,

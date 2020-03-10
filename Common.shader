@@ -2,6 +2,19 @@
 #define EPSILON 1e-4
 #define PI 3.1415926535897932384626433832795
 
+#define KEY_LEFT  65
+#define KEY_UP    87
+#define KEY_RIGHT 68
+#define KEY_DOWN  83
+#define KEY_0     81
+#define KEY_1     69
+
+// Key events:
+//  The texel x coordinate defines the code of the key to scan.
+//  The texel y coordinate defines the type of events to fetch for that key.
+#define isKeyDown(key)    (texelFetch(iChannel0, ivec2(key, 0),0 ).x > 0.5)
+#define isKeyPressed(key) (texelFetch(iChannel0, ivec2(key, 1),0 ).x > 0.5)
+#define isKeyToggled(key) (texelFetch(iChannel0, ivec2(key, 2),0 ).x > 0.5)
 // scene type
 #define SUN 0
 #define BOX 1
