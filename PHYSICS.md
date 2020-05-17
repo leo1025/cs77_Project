@@ -1,4 +1,5 @@
 # How our physics works.
+Iosef Casas
 ## We used Keplerian Orbital Mechanics
 ### Why Kepler?
 - Newton’s Laws describe the gravitational interaction
@@ -17,7 +18,7 @@ Which would have taken a long time to translate into code.
 
 But I discovered a useful insight...
 
-<img src="imglog/insight.png" width="400" height="400">
+<img src="imglog/insight.png" width="400" height="200">
 
 ## How that translates into code
 Kepler’s Laws actually translate well into trigonometry (much simpler)
@@ -32,7 +33,7 @@ Assumptions and information we had on hand:
 
 ## Single Orbit Results
 
-<img src="imglog/simul1.png" width="400" height="400">
+<img src="imglog/simul1.png" width="400" height="200">
 
 AND SO IT ORBITS!
 The red cube is a section of the screen that was used to store the planet position.
@@ -44,5 +45,10 @@ The red cube is a section of the screen that was used to store the planet positi
 And so we could simulate four planets orbiting. Why?
 - Mercury and anything beyond Saturn are too small
 - Looks ugly and there are integration issues
-> Iosef uses ray tracing
-> Jiro uses sphere tracing
+- Iosef uses ray tracing while Jiro uses sphere tracing
+
+#### Sources for Keplerian Orbits
+- https://baezortega.github.io/2019/02/05/kepler-orbits/
+- http://hyperphysics.phy-astr.gsu.edu/hbase/kepler.html
+- https://en.wikipedia.org/wiki/Kepler%27s_laws_of_planetary_motion
+- https://en.wikipedia.org/wiki/Orbital_mechanics
