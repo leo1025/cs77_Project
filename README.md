@@ -29,7 +29,7 @@ Integrating both: (unseen problems including)
 - Make sure channels worked
 - Adjust sun to not be an emitting light source (light exists but doesn’t come nor affect sun)
 
-<img src="imglog/funny.png" width="400" height="225">
+<img src="imglog/funny.png" width="800" height="450">
 
 ## How to use
 - Click link https://www.shadertoy.com/view/wtKXWW

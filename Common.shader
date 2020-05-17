@@ -2,9 +2,28 @@
 #define EPSILON 1e-4
 #define PI 3.1415926535897932384626433832795
 
+#define KEY_LEFT  65
+#define KEY_UP    87
+#define KEY_RIGHT 68
+#define KEY_DOWN  83
+#define KEY_0     81
+#define KEY_1     69
+
+// Key events:
+//  The texel x coordinate defines the code of the key to scan.
+//  The texel y coordinate defines the type of events to fetch for that key.
+#define isKeyDown(key)    (texelFetch(iChannel0, ivec2(key, 0),0 ).x > 0.5)
+#define isKeyPressed(key) (texelFetch(iChannel0, ivec2(key, 1),0 ).x > 0.5)
+#define isKeyToggled(key) (texelFetch(iChannel0, ivec2(key, 2),0 ).x > 0.5)
 // scene type
 #define SUN 0
-#define TEMP_PLANET 1
+#define BOX 1
+#define CYLINDER 2
+#define CONE 3
+#define EARTH 4
+#define MARS 5
+#define JUPITER 6
+#define SATURN 6
 
 // shade mode
 #define GRID 0
@@ -15,6 +34,14 @@
 #define DIFFUSE_DIR_HARD_SHADOWS 5
 #define DIFFUSE_POINT_SOFT_SHADOWS 6
 #define DIFFUSE_DIR_SOFT_SHADOWS 7
+#define FINAL_SCENE_REFLECT 8
+
+// radius
+#define SUNR 5.0
+#define EARTHR 3.0
+#define MARSR 1.5
+#define JUPITERR 9.0
+#define SATURNR 8.0
 
 //
 // Render Settings
@@ -25,8 +52,9 @@ struct settings
     int shade_mode;
 };
 
-settings render_settings = settings(SUN, NORMAL);
+settings render_settings = settings(BOX, DIFFUSE_POINT_SOFT_SHADOWS); // initial object
 
+//float anim_speed = 0.35;
 float anim_speed = 0.35;
 int cost_norm = 200;
 
@@ -100,85 +128,207 @@ float sdSphere(vec3 p, float r)
  	return length(p) - r;
 }
 
-float sdLine(in vec2 p, in vec2 a, in vec2 b)
+float world_sdf(vec3 p, vec3 obj_pos, float time, settings setts)
 {
-    // TODO
-    float t_scalar = dot((b - a), (a - p))/dot((b - a), (b - a));
+    if (setts.sdf_func == SUN)
+    {
+        return sdSphere(p - obj_pos, SUNR);
+    }
 
-    vec2 G_vec = a - (b - a) * t_scalar;
+    if (setts.sdf_func == EARTH)
+    {
+        return sdSphere(p - obj_pos, EARTHR);
+    }
 
-    float dot_product = dot((b - a), (G_vec - a));
+    if (setts.sdf_func == MARS)
+    {
+        return sdSphere(p - obj_pos, MARSR);
+    }
 
-    if (dot_product > 0.0 && dot_product < pow(length(b - a), 2.0)) {
+    if (setts.sdf_func == JUPITER)
+    {
+        return sdSphere(p - obj_pos, JUPITERR);
+    }
 
-        return length(G_vec - p);
+    if (setts.sdf_func == SATURN)
+    {
+        return sdSphere(p - obj_pos, SATURNR);
+    }
 
-    } else {
+    return 1.f;
+}
 
-    	float dist_0 = length(p - a);
+void polar_domain_repetition(inout vec2 p, float repetitions)
+{
 
-        float dist_1 = length(p - b);
+    float angle = 2.0*PI/repetitions;
 
-        if (dist_0 > dist_1) {
+    float r = sqrt(pow(p.x, 2.0) + pow(p.y, 2.0));
 
-        	return dist_1;
+    float theta = atan(p.y/p.x);
+
+    float modulous = mod(theta + angle/2.0, angle) - angle/2.0;
+
+    p = vec2(r * cos(modulous), r * sin(modulous));
+
+}
+// Ray tracing in one weekend basecode for Dartmouth CS 77/177
+// by Wojciech Jarosz, 2019
+// adapted from on https://www.shadertoy.com/view/XlycWh
+
+#define MAX_FLOAT 1e5
+#define MAX_RECURSION 50
+
+#define AT 1.0
+
+#define DELTA 5e-5
+
+// Source for Earth information
+// https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+
+#define EARTH_SEMIMAJOR_AXIS 50.0
+#define EARTH_SEMIMINOR_AXIS 50.0
+
+#define MARS_SEMIMAJOR_AXIS 75.0
+#define MARS_SEMIMINOR_AXIS 75.0
+
+#define JUPITER_SEMIMAJOR_AXIS 250.0
+#define JUPITER_SEMIMINOR_AXIS 250.0
+
+#define SATURN_SEMIMAJOR_AXIS 475.0
+#define SATURN_SEMIMINOR_AXIS 475.0
+//
+// Hash functions by Nimitz:
+// https://www.shadertoy.com/view/Xt3cDn
+//
+
+float g_seed = 0.;
+
+uint base_hash(uvec2 p) {
+    p = 1103515245U*((p >> 1U)^(p.yx));
+    uint h32 = 1103515245U*((p.x)^(p.y>>3U));
+    return h32^(h32 >> 16);
+}
+
+void init_rand(in vec2 frag_coord, in float time) {
+    g_seed = float(base_hash(floatBitsToUint(frag_coord)))/float(0xffffffffU)+time;
+}
+
+
+float rand1(inout float seed) {
+    uint n = base_hash(floatBitsToUint(vec2(seed+=.1,seed+=.1)));
+    return float(n)/float(0xffffffffU);
+}
+
+vec2 rand2(inout float seed) {
+    uint n = base_hash(floatBitsToUint(vec2(seed+=.1,seed+=.1)));
+    uvec2 rz = uvec2(n, n*48271U);
+    return vec2(rz.xy & uvec2(0x7fffffffU))/float(0x7fffffff);
+}
+
+vec3 rand3(inout float seed) {
+    uint n = base_hash(floatBitsToUint(vec2(seed+=.1,seed+=.1)));
+    uvec3 rz = uvec3(n, n*16807U, n*48271U);
+    return vec3(rz & uvec3(0x7fffffffU))/float(0x7fffffff);
+}
+
+
+vec2 random_in_unit_disk(inout float seed) {
+    vec2 h = rand2(seed) * vec2(1.,6.28318530718);
+    float phi = h.y;
+    float r = sqrt(h.x);
+	return r * vec2(sin(phi),cos(phi));
+}
+
+vec3 random_in_unit_sphere(inout float seed) {
+    vec3 h = rand3(seed) * vec3(2.,6.28318530718,1.)-vec3(1,0,0);
+    float phi = h.y;
+    float r = pow(h.z, 1./3.);
+	return r * vec3(sqrt(1.-h.x*h.x)*vec2(sin(phi),cos(phi)),h.x);
+}
+
+float euclidean_dist (vec2 P, vec2 Q) {
+
+	return sqrt(pow(P.x - Q.x, 2.0) + pow(P.y - Q.y, 2.0));
+
+}
+
+float area_run (vec2 P, vec2 Q, vec2 F) {
+
+	float base = euclidean_dist(P, Q);
+
+    float height = sqrt(pow(euclidean_dist(P, F), 2.0) - pow(base / 2.0, 2.0));
+
+    return base * height / 2.0;
+
+}
+
+// Get next y based on x, geometrically.
+float get_y (float x, float a, float b, float Cx, float s) {
+
+	return s * (b/a) * sqrt(pow(a, 2.0) - pow((x - Cx), 2.0));
+
+}
+
+
+// Sweep orbit, calculate new position
+vec3 get_next_pos (vec3 P, float a, float b, float Cx, float delta, float A_t, vec2 F) {
+
+	float area = 0.0;
+
+    float x = P.x;
+
+    float y = 0.0;
+
+	float s = P.z;
+
+    // Sweep by delta until equal area is carved, once done so, return new position.
+    while (area < A_t) {
+
+    	x = x + s * delta;
+
+        if (x < (Cx - a)) {
+
+        	x = Cx - a;
 
         }
 
-        return dist_0;
-    }
-}
+        else if (x > (Cx + a)) {
 
-float opSmoothUnion(float d1, float d2, float k)
-{
-    float h = max(k - abs(d1 - d2), 0.0);
+        	x = Cx + a;
 
-    return min(d1, d2) - (pow(h, 2.0)/(4.0 * k));
-}
+        }
 
-float opSmoothSubtraction(float d1, float d2, float k)
-{
-    float h = max(k - abs(-d1 - d2), 0.0);
+        y = get_y(x, a, b, Cx, s);
 
-    return max(-d1, d2) + (pow(h, 2.0)/(4.0 * k));
-}
+        if ((y == 0.0) || (s < 0.0 && y > 0.0) || (s > 0.0 && y < 0.0)) {
 
-float opSmoothIntersection( float d1, float d2, float k )
-{
-    float h = max(k - abs(d1 - d2), 0.0);
+        	s = -s;
 
-    return max(d1, d2) + (pow(h, 2.0)/(4.0 * k));
-}
+        }
 
-float opRound(float d, float iso)
-{
-    return d - iso;
-}
-
-float world_sdf(vec3 p, float time, settings setts)
-{
-    if (setts.sdf_func == SUN) {
-
-        return sdSphere(p - vec3(0.f, 0.f, 0.f), 1.5f);
+        area = area_run(P.xy, vec2(x, y), F);
 
     }
 
-    if (setts.sdf_func == TEMP_PLANET) {
+    return vec3(x, y, s);
 
-    	return sdSphere(p - vec3(1.f, 0.f, 0.f), 0.5f);
-
-    }
 }
 
-
-// The animation which you see is of a 2D slice of a 3D object. The objects exist in [-1, 1] space
-// and the slice is continuously moved along z=[-1,1] using a cosine. This method renders what the
-// current z value is as a progress bar at the bottom of the animation for reference.
-vec3 shade_progress_bar(vec2 p, vec2 res, float z)
+//----------------------------------------------------------------------------------------
+//  1 out, 1 in...
+float hash11(float p)
 {
-    // have to take account of the aspect ratio
-    float xpos = p.x * res.y / res.x;
+    p = fract(p * .1031);
+    p *= p + 33.33;
+    p *= p + p;
+    return fract(p);
+}
 
-    if (xpos > z - 0.01 && xpos < z + 0.01) return vec3(1.0);
-    else return vec3(0.0);
+//  1 out, 2 in...
+float hash12(vec2 p)
+{
+	vec3 p3  = fract(vec3(p.xyx) * .1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
 }
