@@ -33,14 +33,14 @@ Assumptions and information we had on hand:
 
 ## Single Orbit Results
 
-<img src="imglog/simul1.png" width="400" height="200">
+<img src="imglog/simul1.png" width="400" height="225">
 
 AND SO IT ORBITS!
 The red cube is a section of the screen that was used to store the planet position.
 
 ## Multiple Orbits Results
 
-<img src="imglog/simul2.png" width="400" height="400">
+<img src="imglog/simul2.png" width="400" height="225">
 
 And so we could simulate four planets orbiting. Why?
 - Mercury and anything beyond Saturn are too small

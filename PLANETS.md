@@ -13,22 +13,22 @@ Texturing and Modeling: A Procedural Approach ed. 3 (Chapter 15)
 
 ## Earth
 ### Creating oceans
-<img src="imglog/bareearth.png" width="400" height="200">
+<img src="imglog/bareearth.png" width="400" height="225">
 
 ### Ice caps (hiding uv map distortions)
-<img src="imglog/icecaps.png" width="400" height="200">
+<img src="imglog/icecaps.png" width="400" height="225">
 
 ### Varying climate by altitude(noise)
-<img src="imglog/establishingclimates.png" width="400" height="200">
+<img src="imglog/establishingclimates.png" width="400" height="225">
 
 ### Muddling land texture with multifractals
-<img src="imglog/climatization.png" width="400" height="200">
+<img src="imglog/climatization.png" width="400" height="225">
 
 ### Unsmoothening the ice caps
-<img src="imglog/rattled.png" width="400" height="200">
+<img src="imglog/rattled.png" width="400" height="225">
 
 ### Adding rivers/lakes
-<img src="imglog/final.png" width="400" height="200">
+<img src="imglog/final.png" width="400" height="225">
 
 ## Gas Giants
 **Coriolis Effect**
@@ -36,7 +36,7 @@ Texturing and Modeling: A Procedural Approach ed. 3 (Chapter 15)
 
 - Can be simulated by rotating perlin noise by the distance from (0,0) on the UV map.
 
-<img src="imglog/gas.png" width="400" height="200">
+<img src="imglog/gas.png" width="400" height="225">
 
 ## Coriolis Issues
 - My perlin noise is not tileable
@@ -46,16 +46,16 @@ Texturing and Modeling: A Procedural Approach ed. 3 (Chapter 15)
 ## Rocky planets (moon)
 ### Basic moon highland v maria(lunar lowlands)
 
-<img src="imglog/moonnormal.png" width="400" height="200">
+<img src="imglog/moonnormal.png" width="400" height="225">
 
 ### Adding crater ring
 
-<img src="imglog/mooncrater.png" width="400" height="200">
+<img src="imglog/mooncrater.png" width="400" height="225">
 
 ### Adding crater rays
 
-<img src="imglog/moonrays.png" width="400" height="200">
+<img src="imglog/moonrays.png" width="400" height="225">
 
 ### Adding depth to crater via noise turbulence
 
-<img src="imglog/finalmoon.png" width="400" height="200">
+<img src="imglog/finalmoon.png" width="400" height="225">
