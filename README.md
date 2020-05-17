@@ -5,7 +5,21 @@ Iosef Casas, Jiro Mizuno
 
 ## Details
 
-## Steps Taken
+## Initial Goals
+###Render the solar system:
+Orbital movement:
+- Multiple Objects on Ray-Tracing/Sphere-Tracing base
+- Single Keplerian Orbit
+- Multiple Keplerian Orbits
+Procedurally generated texture:
+- Earth
+- Rocky (the moon)
+- Gas
+Integrating both: (unseen problems including)
+- Integration in general
+- Adjusting soft shadow function for the sun
+- Camera movement
+
 
 ## How to use
 
