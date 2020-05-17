@@ -11,10 +11,38 @@ In simple terms, the three laws can be described as such.
 - The Square of the Orbital period is directly proportional to the cube of the semi-major Axis.
 However the formula for such mechanics looks like this…
 
-<img src="imglog/formula.png">
+<img src="imglog/formula.png" width="400" height="400">
 
 Which would have taken a long time to translate into code.
 
-<img src="imglog/insight.png">
-
 But I discovered a useful insight...
+
+<img src="imglog/insight.png" width="400" height="400">
+
+## How that translates into code
+Kepler’s Laws actually translate well into trigonometry (much simpler)
+- Euclidean Distance Function:
+  to find the distance between two bodies, that being usually the Sun and another planet.
+- Area Carved Function:
+  finding base and height of triangle within to orbit points and the sun. Then calculating the area.
+- Next Position Function:
+  find the next position in the orbit based on the current orbit.
+Assumptions and information we had on hand:
+- Planetary info based on NASA
+
+## Single Orbit Results
+
+<img src="imglog/simul1.png" width="400" height="400">
+
+AND SO IT ORBITS!
+The red cube is a section of the screen that was used to store the planet position.
+
+## Multiple Orbits Results
+
+<img src="imglog/simul2.png" width="400" height="400">
+
+And so we could simulate four planets orbiting. Why?
+- Mercury and anything beyond Saturn are too small
+- Looks ugly and there are integration issues
+> Iosef uses ray tracing
+> Jiro uses sphere tracing
